@@ -47,4 +47,51 @@ class Chapter7Test {
 
         System.out.println("합계: " + sharedResource.getSum());
     }
+
+    @Test
+    @DisplayName("ConditionSynchronization 테스트")
+    void given_whenConditionSynchronization_then() {
+        ConditionSynchronization conditionSynchronization = new ConditionSynchronization();
+
+        new Thread(() -> {
+            for (int i = 0; i < 5; i++) {
+                conditionSynchronization.produce();
+            }
+        }).start();
+
+        new Thread(() -> {
+            for (int i = 0; i < 5; i++) {
+                conditionSynchronization.consume();
+            }
+        }).start();
+    }
+
+    @Test
+    @DisplayName("SpinLock 테스트")
+    void given_when_then() throws InterruptedException {
+        SpinLock spinLock = new SpinLock();
+
+        Runnable task = () -> {
+            spinLock.lock();
+            System.out.println(Thread.currentThread().getName() + " 가 락을 획득함");
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } finally {
+                System.out.println(Thread.currentThread().getName() + " 가 락을 해제");
+                spinLock.unlock();
+                System.out.println(Thread.currentThread().getName() + " 가 락을 해제 완료");
+            }
+        };
+
+        Thread thread1 = new Thread(task);
+        Thread thread2 = new Thread(task);
+
+        thread1.start();
+        thread2.start();
+
+        thread1.join();
+        thread2.join();
+    }
 }
